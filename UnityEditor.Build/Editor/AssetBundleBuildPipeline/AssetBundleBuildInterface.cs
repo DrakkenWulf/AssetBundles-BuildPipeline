@@ -69,7 +69,7 @@ namespace UnityEditor.AssetBundles
 {
     // DDP - I have renamed many things in the interest of API clarity.
     // There is no intent to change the underlying behavior.
-    // For example, prefixing everything with "AssetBundle" is unnecessary and cluttering. 
+    // For example, prefixing everything with "AssetBundle" is unnecessary and cluttering.
     // That's what namespaces are for.
 
 
@@ -86,42 +86,42 @@ namespace UnityEditor.AssetBundles
 
 
     public enum CompressionType
-	{
-		None,
-		Lzma,
-		Lz4,
-		Lz4HC,
-		Lzham,
-	}
+    {
+        None,
+        Lzma,
+        Lz4,
+        Lz4HC,
+        Lzham,
+    }
 
-	public enum CompressionLevel
-	{
-		None,
-		Fastest,
-		Fast,
-		Normal,
-		High,
-		Maximum,
-	}
-	
-	public struct BuildCompression
-	{
+    public enum CompressionLevel
+    {
+        None,
+        Fastest,
+        Fast,
+        Normal,
+        High,
+        Maximum,
+    }
+
+    public struct BuildCompression
+    {
         // Default block size compression to be used with blockSize below
         public const uint DefaultCompressionBlockSize = 131072; //128 * 1024;
 
         public CompressionType compression;
-		public CompressionLevel level;
-		public uint blockSize;
-		public bool streamed;
-	}
+        public CompressionLevel level;
+        public uint blockSize;
+        public bool streamed;
+    }
 
-	public struct BuildSettings // AssetBundleBuildSettings
+    public struct BuildSettings // AssetBundleBuildSettings
     {
-		public string outputFolder;
-		public BuildTarget target;
-		public bool streamingResources;
-		public bool editorBundles;
-	}
+        public string outputFolder;
+        public BuildTarget target;
+        public bool streamingResources;
+        public bool editorBundles;
+    }
 
     public struct BuildCommand
     {
@@ -137,33 +137,33 @@ namespace UnityEditor.AssetBundles
         public ObjectIdentifier[] assetBundleObjects;
         public string[] assetBundleDependencies;
     }
-	
-	public struct AssetBundleBuildOutput
-	{
-		public struct ResourceFile
-		{
-			public string fileName;
-			public bool serializedFile;
-		}
-		
-		public struct Result
-		{
-            // These are very very unclear. What needs to be stored in files by caller, what doesn't?
-			public string assetBundleName;
-			public GUID[] explicitAssets;
-			public ObjectIdentifier[] assetBundleObjects;
-			public string[] assetBundleDependencies;
-			public ResourceFile[] resourceFiles;
-			public Hash128 targetHash;
-			public Hash128 typeTreeLayoutHash;
-			public System.Type[] includedTypes;
-		}
 
-		public Result[] results;
-	}
-	
+    public struct AssetBundleBuildOutput
+    {
+        public struct ResourceFile
+        {
+            public string fileName;
+            public bool serializedFile;
+        }
+
+        public struct Result
+        {
+            // These are very very unclear. What needs to be stored in files by caller, what doesn't?
+            public string assetBundleName;
+            public GUID[] explicitAssets;
+            public ObjectIdentifier[] assetBundleObjects;
+            public string[] assetBundleDependencies;
+            public ResourceFile[] resourceFiles;
+            public Hash128 targetHash;
+            public Hash128 typeTreeLayoutHash;
+            public System.Type[] includedTypes;
+        }
+
+        public Result[] results;
+    }
+
     public class AssetBundleBuildInterface
-	{
+    {
         // Generates an array of all asset bundles and the assets they include
         // Notes: Pre-dreprecated as we want to move asset bundle data off of asset meta files and into it's own asset
         // DDP: This worries me, as that means the asset's meta file is no longer the single source of information for all settings pertaining to this asset.
@@ -176,13 +176,13 @@ namespace UnityEditor.AssetBundles
         // Writes out SerializedFile and Resource files for each bundle defined in CommandList
         extern public static AssetBundleBuildOutput WriteResourcefilesForAssetBundles(BuildCommand[] commands, BuildSettings settings);
 
-		// Archives and compresses SerializedFile and Resource files for a single asset bundle
-		extern public static void ArchiveAndCompressAssetBundle(AssetBundleBuildOutput.ResourceFile[] resourceFiles, string outputBundlePath, BuildCompression compression);
+        // Archives and compresses SerializedFile and Resource files for a single asset bundle
+        extern public static void ArchiveAndCompressAssetBundle(AssetBundleBuildOutput.ResourceFile[] resourceFiles, string outputBundlePath, BuildCompression compression);
 
-		// TODO: 
-		// Incremental building of asset bundles
-		// Maybe find some better names for some types / fields. IE: CommandList.Command is kinda awkward
-	}
+        // TODO:
+        // Incremental building of asset bundles
+        // Maybe find some better names for some types / fields. IE: CommandList.Command is kinda awkward
+    }
 }
 
 #endif
