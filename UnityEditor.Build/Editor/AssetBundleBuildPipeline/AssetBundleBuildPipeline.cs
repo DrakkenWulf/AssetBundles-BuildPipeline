@@ -10,31 +10,39 @@ namespace UnityEditor.Build
 		[MenuItem("AssetBundles/Build Asset Bundles")]
 		static void BuildAssetBundlesMenuItem()
 		{
-			var input = GenerateAssetBundleBuildInput();
+			var input = AssetBundleBuildInterface.GenerateAssetBundleBuildInput();
 			var settings = GenerateAssetBundleBuildSettings();
+			var compression = GenerateBuildCompression();
 			var commands = GenerateAssetBundleBuildCommandSet(input, settings);
 
-			var output = AssetBundleBuildInterface.ExecuteAssetBuildCommandSet(commands);
+			// Ensure the output path is created
+			// TODO: mabe we should do something if it exists, incremental building?
+			Directory.CreateDirectory(settings.outputFolder);
+			var output = AssetBundleBuildInterface.WriteResourcefilesForAssetBundles(commands, settings);
 			foreach (var bundle in output.results)
-				AssetBundleBuildInterface.CompressAssetBundle(bundle.resourceFiles, AssetBundleCompression.LZ4);
+				AssetBundleBuildInterface.ArchiveAndCompressAssetBundle(bundle.resourceFiles, Path.Combine(settings.outputFolder, bundle.assetBundleName), compression);
 
 			CacheAssetBundleBuildOutput(output, settings);
 		}
 
-		public static AssetBundleBuildInput GenerateAssetBundleBuildInput()
-		{
-			// TODO: Currently we do this at the low level as we cannot efficently walk the asset database from the high level yet
-			return AssetBundleBuildInterface.GenerateAssetBundleBuildInput();
-		}
-
 		public static AssetBundleBuildSettings GenerateAssetBundleBuildSettings()
 		{
-			// TODO: settings at this point is unused but this is a rough idea of the struct usage
 			var settings = new AssetBundleBuildSettings();
 			settings.target = EditorUserBuildSettings.activeBuildTarget;
-			settings.outputFolder = Path.Combine(Directory.GetCurrentDirectory(), "AssetBundles/" + settings.target);
-			settings.options = BuildAssetBundleOptions.None;
+			settings.outputFolder = "AssetBundles/" + settings.target;
+			settings.streamingResources = true;
+			settings.editorBundles = false;
 			return settings;
+		}
+
+		public static BuildCompression GenerateBuildCompression()
+		{
+			BuildCompression compression;
+			compression.compression = CompressionType.Lz4HC;
+			compression.streamed = false;
+			compression.level = CompressionLevel.Maximum;
+			compression.blockSize = AssetBundleBuildInterface.DefaultCompressionBlockSize;
+			return compression;
 		}
 
 		private static void DebugPrintCommandSet(ref AssetBundleBuildCommandSet commandSet)
@@ -88,8 +96,7 @@ namespace UnityEditor.Build
 					var explicitAsset = new AssetBundleBuildCommandSet.AssetLoadInfo();
 					explicitAsset.asset = definition.explicitAssets[j];
 					explicitAsset.includedObjects = AssetBundleBuildInterface.GetObjectIdentifiersInAsset(definition.explicitAssets[j]);
-					// TODO: Maybe update the LLAPI to do this?
-					explicitAsset.referencedObjects = AssetBundleBuildInterface.GetPlayerDependenciesForObjects(explicitAsset.includedObjects).Except(explicitAsset.includedObjects).ToArray();
+					explicitAsset.referencedObjects = AssetBundleBuildInterface.GetPlayerDependenciesForObjects(explicitAsset.includedObjects);
 
 					command.explicitAssets[j] = explicitAsset;
 					allObjects.UnionWith(explicitAsset.includedObjects);
@@ -104,11 +111,11 @@ namespace UnityEditor.Build
 			//DebugPrintCommandSet(ref commandSet);
 
 			// At this point, We have generated fully self contained asset bundles with 0 dependencies.
-			// Default implementation is to reduce duplication of objects by declaring dependencies to other asset bundles
-			// if that other bundle has an explicit asset declared that contains objects needed as dependencies on this asset bundle
+			// Default implementation is to reduce duplication of objects by declaring dependencies to other asset
+			//    bundles if that other asset bundle has an explicit asset declared that contains the objects needed
 			// We also remove any built in unity objects as they are built with the player (We may want to change this part in the future)
 			CalculateAssetBundleBuildDependencies(ref commandSet);
-			// Note: I may, or may not feel dirty doing mutable thinks to an otherwise should be immutable struct
+			// Note: I may, or may not feel dirty doing mutable things to what otherwise should be immutable struct
 
 			// TODO: Debug printing
 			//DebugPrintCommandSet(ref commandSet);
