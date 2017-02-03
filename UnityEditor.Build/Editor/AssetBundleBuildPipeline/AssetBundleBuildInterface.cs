@@ -161,7 +161,11 @@ namespace UnityEditor.AssetBundles
         /// <summary>
         /// List of asset bundle names that this bundle depends on.
         /// </summary>
-        /// <remarks>client is expected to have these bundles open/loaded before extracting content from this one.</remarks>
+        /// <remarks>
+        /// client is expected to have these bundles open/loaded before extracting content from this one.
+        /// This list plus AssetDatabase.GetAssetDependencyHash() for each source file is enough to determine
+        /// if a given bundle needs regeneration.
+        /// </remarks>
         public string[] assetBundleDependencies;
     }
 
