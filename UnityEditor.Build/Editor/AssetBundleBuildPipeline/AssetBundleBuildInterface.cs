@@ -79,7 +79,7 @@ namespace UnityEditor.AssetBundles
     {
         public struct Definition
         {
-            // Do you plan on integrating the Variants here? 
+            // Do you plan on integrating the Variants here?
             // Or will that be added to the assetBundleName automatically?
             public string assetBundleName;
             public GUID[] explicitAssets;
@@ -127,6 +127,9 @@ namespace UnityEditor.AssetBundles
         public bool editorBundles;
     }
 
+    /// <summary>
+    /// Defines a single bundle that will be created
+    /// </summary>
     public struct BuildCommand
     {
         public struct AssetLoadInfo
@@ -136,37 +139,67 @@ namespace UnityEditor.AssetBundles
             public ObjectIdentifier[] referencedObjects;
         }
 
+        /// <summary>
+        /// the desired bundle file name
+        /// </summary>
         public string assetBundleName;
+
+        /// <summary>
+        /// List of assets that can be directly requested by client.
+        /// </summary>
+        /// <remarks>Can be trimmed to minimize what's available to client</remarks>
         public AssetLoadInfo[] explicitAssets;
+
+        /// <summary>
+        /// The list of objects that are actually included in this bundle
+        /// </summary>
+        /// <remarks>Literally, the contents of this bundle. 
+        /// All contents of explicitAssets must either be available in this list or the list
+        /// of one of the bundles we depend on.</remarks>
         public ObjectIdentifier[] assetBundleObjects;
+
+        /// <summary>
+        /// List of asset bundle names that this bundle depends on.
+        /// </summary>
+        /// <remarks>client is expected to have these bundles open/loaded before extracting content from this one.</remarks>
         public string[] assetBundleDependencies;
     }
 
-    public struct AssetBundleBuildOutput
+
+    /// <summary>
+    /// Details of a single bundle that has been created
+    /// </summary>
+    /// <remarks>Expect one of these for each BuildCommand</remarks>
+    public struct BuildResult
     {
         public struct ResourceFile
         {
             public string fileName;
             public bool serializedFile;
         }
+        
+        /// <summary>
+        /// Resulting filename (matches BuildCommand.assetBundleName)
+        /// </summary>
+        public string assetBundleName;
 
-        public struct Result
-        {
-            // These are very very unclear. What needs to be stored in files by caller, what doesn't?
-            public string assetBundleName;
-            public GUID[] explicitAssets;
-            public ObjectIdentifier[] assetBundleObjects;
-            public string[] assetBundleDependencies;
-            public ResourceFile[] resourceFiles;
-            public Hash128 targetHash;
-            public Hash128 typeTreeLayoutHash;
-            public System.Type[] includedTypes;
-        }
+        // DDP - this feels like it needs an error string, so caller can know what went wrong, if anything
 
-        public Result[] results;
+        /// <summary>
+        /// Internal file parts to be passed to archiver.
+        /// </summary>
+        public ResourceFile[] resourceFiles;
+
+        // The following is purely informational.
+        public GUID[] explicitAssets;
+        public ObjectIdentifier[] assetBundleObjects;
+        public string[] assetBundleDependencies;
+        public Hash128 targetHash;
+        public Hash128 typeTreeLayoutHash;
+        public System.Type[] includedTypes;
     }
 
-    public class AssetBundleBuildInterface
+    public class RawBuildInterface
     {
         // Generates an array of all asset bundles and the assets they include
         // Notes: Pre-dreprecated as we want to move asset bundle data off of asset meta files and into it's own asset
@@ -175,13 +208,20 @@ namespace UnityEditor.AssetBundles
         // extern public static AssetBundleBuildInput GenerateAssetBundleBuildInput();
         extern public static EditorDefinedBundles GetEditorDefinedBundles();
 
-        // There is no clear indication of getting from EditorDefinedBundles to CommandList
+        // The build process is in two phases:
+        // 1. Create uncompressed "raw" bundle data (WriteResourcefilesForAssetBundles)
+        // 2. For each raw bundle, compress and write final file to disk for distribution (ArchiveAndCompressAssetBundle)
 
         // Writes out SerializedFile and Resource files for each bundle defined in CommandList
-        extern public static AssetBundleBuildOutput WriteResourcefilesForAssetBundles(BuildCommand[] commands, BuildSettings settings);
+        extern public static BuildResult[] WriteResourcefilesForAssetBundles(BuildCommand[] commands, BuildSettings settings);
 
         // Archives and compresses SerializedFile and Resource files for a single asset bundle
-        extern public static void ArchiveAndCompressAssetBundle(AssetBundleBuildOutput.ResourceFile[] resourceFiles, string outputBundlePath, BuildCompression compression);
+        // DDP - there is no error reporting here. Returning a string would be sufficient.
+        // DDP - I can see how the other pieces might want to be broken out, but should we allow
+        // callers to mess with the resourceFiles list? Maybe just pass a single BuildResult?
+        extern public static void ArchiveAndCompressAssetBundle(BuildResult.ResourceFile[] resourceFiles, string outputBundlePath, BuildCompression compression);
+
+        // DDP - Can we finally get an API for WWW to generate a WWW.CRC from a file on disk?
 
         // TODO:
         // Incremental building of asset bundles
