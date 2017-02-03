@@ -72,11 +72,15 @@ namespace UnityEditor.AssetBundles
     // For example, prefixing everything with "AssetBundle" is unnecessary and cluttering.
     // That's what namespaces are for.
 
-
-    public struct BundlesNeedingBuild   // was AssetBundleBuildInput
+    /// <summary>
+    /// The list of bundle assignments as defined in the Editor Inspector by the "asset bundle" dropdown
+    /// </summary>
+    public struct EditorDefinedBundles   // was AssetBundleBuildInput
     {
         public struct Definition
         {
+            // Do you plan on integrating the Variants here? 
+            // Or will that be added to the assetBundleName automatically?
             public string assetBundleName;
             public GUID[] explicitAssets;
         }
@@ -169,9 +173,9 @@ namespace UnityEditor.AssetBundles
         // DDP: This worries me, as that means the asset's meta file is no longer the single source of information for all settings pertaining to this asset.
         // DDP: Unclear if this provides only bundle definitions that have changed or full list.
         // extern public static AssetBundleBuildInput GenerateAssetBundleBuildInput();
-        extern public static BundlesNeedingBuild DecideBundlesNeedingBuild();
+        extern public static EditorDefinedBundles GetEditorDefinedBundles();
 
-        // There is no clear indication of getting from BundlesNeedingBuild to CommandList
+        // There is no clear indication of getting from EditorDefinedBundles to CommandList
 
         // Writes out SerializedFile and Resource files for each bundle defined in CommandList
         extern public static AssetBundleBuildOutput WriteResourcefilesForAssetBundles(BuildCommand[] commands, BuildSettings settings);
