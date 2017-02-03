@@ -214,6 +214,13 @@ namespace UnityEditor.AssetBundles
         // extern public static AssetBundleBuildInput GenerateAssetBundleBuildInput();
         extern public static EditorDefinedBundles GetEditorDefinedBundles();
 
+        // Generate a list of "bundles" that are embedded in the application binary.
+        // This is a read only list, and can only be used to determine
+        // what assets that newly built bundles may expect or rely on.
+        // DDP - the achille's heel of asset bundles is that you can't make use of assets 
+        // that are embedded with the binary as dependencies.
+        extern public static BuildCommand[] GetBinaryBuiltinBundles();
+
         // The build process is in two phases:
         // 1. Create uncompressed "raw" bundle data (WriteResourcefilesForAssetBundles)
         // 2. For each raw bundle, compress and write final file to disk for distribution (ArchiveAndCompressAssetBundle)
