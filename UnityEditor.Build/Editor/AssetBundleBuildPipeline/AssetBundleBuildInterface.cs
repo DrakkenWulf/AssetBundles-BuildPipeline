@@ -121,6 +121,8 @@ namespace UnityEditor.AssetBundles
 
     public struct BuildSettings // AssetBundleBuildSettings
     {
+        // DDP - this should be temp folder, right? Where ResourceFiles are written?
+        // As a developer I would want them written to a different location than the final bundle files.
         public string outputFolder;
         public BuildTarget target;
         public bool streamingResources;
